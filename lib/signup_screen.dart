@@ -45,6 +45,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
 
     try {
+      // Show loading indicator
+      _showLoadingIndicator();
+
       // Create user with email and password using Firebase Authentication
       UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailEditControl.text,
@@ -58,14 +61,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
         'contactNumber': _contactEditControl.text,
       });
 
+      // Hide loading indicator
+      _hideLoadingIndicator();
+
       // Display success message
       _showSnackBar('Sign up successful!', Colors.green);
 
-      // Navigate back to the sign-in screen
-      Navigator.push(
+      // Clear the form fields after successful sign up
+      _clearFormFields();
+
+      // Navigate to the sign-in screen after successful sign-up
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => SignInScreen(userType: '',)),
       );
+
     } catch (error) {
       // Handle sign-up errors
       _handleSignUpError(error);
@@ -76,7 +86,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     String errorMessage;
     if (error is FirebaseAuthException) {
       // Firebase Authentication error
-      errorMessage = 'Sign up failed. Please check your information and try again.';
+      errorMessage = _getErrorMessage(error.code);
     } else {
       // Other errors
       errorMessage = 'Sign up failed. Please try again later.';
@@ -87,6 +97,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _showSnackBar(errorMessage, Colors.red);
   }
 
+  String _getErrorMessage(String errorCode) {
+    switch (errorCode) {
+      case 'weak-password':
+        return 'The password is too weak.';
+      case 'email-already-in-use':
+        return 'The email address is already in use.';
+    // Add more cases for other relevant error codes
+      default:
+        return 'Sign up failed. Please check your information and try again.';
+    }
+  }
+
   void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -94,6 +116,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
         backgroundColor: color,
       ),
     );
+  }
+
+  void _showLoadingIndicator() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+
+  void _hideLoadingIndicator() {
+    Navigator.of(context).pop();
   }
 
   bool _validateForm() {
@@ -119,9 +155,46 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return false;
     }
 
+    // Validate contact number
+    if (!_validateContactNumber(_contactEditControl.text)) {
+      return false;
+    }
+
     // Add more validation rules as needed
 
     return true;
+  }
+
+  bool _validateContactNumber(String contactNumber) {
+    // Check for empty field
+    if (contactNumber.isEmpty) {
+      _showSnackBar('Please enter your contact number.', Colors.red);
+      return false;
+    }
+
+    // Remove any non-numeric characters from the input
+    contactNumber = contactNumber.replaceAll(RegExp(r'\D'), '');
+
+    // Check if the formatted number matches the required format
+
+    final phoneNumberRegex = r'^(?:\+?92|0)?\d{10}$';
+    // Accepts numbers with or without +92 prefix and leading 0, and exactly 10 digits
+
+    if (!RegExp(phoneNumberRegex).hasMatch(contactNumber)) {
+      _showSnackBar('Invalid contact number format. Please enter a valid Pakistani number (e.g.+923458692351 ).', Colors.red);
+      return false;
+    }
+
+    return true;
+  }
+
+
+  void _clearFormFields() {
+    _nameEditControl.clear();
+    _emailEditControl.clear();
+    _contactEditControl.clear();
+    _passwordEditControl.clear();
+    _retypePasswordEditControl.clear();
   }
 
   @override
@@ -157,7 +230,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
-        child: SignUpForm( // Use the new SignUpForm widget
+        child: SignUpForm(
           nameController: _nameEditControl,
           emailController: _emailEditControl,
           contactController: _contactEditControl,
