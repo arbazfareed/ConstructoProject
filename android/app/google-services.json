@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "56149843170",
+    "project_id": "constructo1-8f711",
+    "storage_bucket": "constructo1-8f711.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:56149843170:android:96619f89ec71e4a91152bb",
+        "android_client_info": {
+          "package_name": "com.example.flutter_signin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKCccD9IoqFhdKE3yDD4OsPUvePxu8jNs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
